@@ -28,8 +28,6 @@ fn main() {
 
     cmd.arg("-serial").arg("mon:stdio");
 
-    // cmd.arg("-display").arg("none");
-
     cmd.arg("-device").arg("isa-debug-exit,iobase=0xf4,iosize=0x04");
 
     if uefi {
