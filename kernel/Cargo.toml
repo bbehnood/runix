@@ -14,3 +14,5 @@ noto-sans-mono-bitmap = { version = "0.3", default-features = false, features = 
     "regular", "size_16", "unicode-basic-latin",
 ] }
 spin = "0.12"
+uart_16550 = "0.7"
+x86_64 = "0.15"

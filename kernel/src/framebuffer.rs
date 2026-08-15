@@ -72,6 +72,33 @@ impl Writer {
             .copy_from_slice(&color[..bpp]);
     }
 
+    pub fn scroll(&mut self) {
+        let height = self.info.height;
+        let stride = self.info.stride;
+        let bpp = self.info.bytes_per_pixel;
+
+        let row_bytes = stride * bpp;
+        let scroll_bytes = LINE_HEIGHT * row_bytes;
+
+        self.framebuffer.copy_within(scroll_bytes.., 0);
+
+        let clear_start = (height - LINE_HEIGHT) * row_bytes;
+
+        self.framebuffer[clear_start..].fill(0);
+
+        self.y_pos = height - LINE_HEIGHT;
+    }
+
+    pub fn newline(&mut self) {
+        self.x_pos = 0;
+
+        if self.y_pos + LINE_HEIGHT + CHAR_HEIGHT > self.info.height {
+            self.scroll();
+        } else {
+            self.y_pos += LINE_HEIGHT;
+        }
+    }
+
     pub fn clear(&mut self) {
         self.framebuffer.fill(0);
         self.x_pos = 0;
@@ -102,33 +129,6 @@ impl Writer {
         }
 
         self.x_pos += width;
-    }
-
-    pub fn newline(&mut self) {
-        self.x_pos = 0;
-
-        if self.y_pos + LINE_HEIGHT + CHAR_HEIGHT > self.info.height {
-            self.scroll();
-        } else {
-            self.y_pos += LINE_HEIGHT;
-        }
-    }
-
-    pub fn scroll(&mut self) {
-        let height = self.info.height;
-        let stride = self.info.stride;
-        let bpp = self.info.bytes_per_pixel;
-
-        let row_bytes = stride * bpp;
-        let scroll_bytes = LINE_HEIGHT * row_bytes;
-
-        self.framebuffer.copy_within(scroll_bytes.., 0);
-
-        let clear_start = (height - LINE_HEIGHT) * row_bytes;
-
-        self.framebuffer[clear_start..].fill(0);
-
-        self.y_pos = height - LINE_HEIGHT;
     }
 }
 
