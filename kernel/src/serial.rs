@@ -1,11 +1,11 @@
-use core::fmt::Write;
+use core::fmt::{self, Write};
 
 use spin::{Mutex, Once};
 use uart_16550::{Config, Uart16550Tty, backend::PioBackend};
 
 pub static SERIAL: Once<Mutex<Uart16550Tty<PioBackend>>> = Once::new();
 
-pub fn init_serial() {
+pub fn init_writer() {
     let uart = unsafe {
         Uart16550Tty::new_port(0x3F8, Config::default())
             .expect("failed to initialize UART")
@@ -30,7 +30,7 @@ macro_rules! serial_println {
 }
 
 #[doc(hidden)]
-pub fn _print(args: ::core::fmt::Arguments) {
+pub fn _print(args: fmt::Arguments) {
     SERIAL
         .get()
         .unwrap()

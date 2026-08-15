@@ -3,6 +3,7 @@
 #![feature(abi_x86_interrupt)]
 
 mod framebuffer;
+mod gdt;
 mod interrupts;
 mod serial;
 
@@ -10,10 +11,6 @@ use core::panic::PanicInfo;
 
 use bootloader_api::{BootInfo, entry_point};
 use x86_64::instructions::{nop, port::Port};
-
-use crate::{
-    framebuffer::init_writer, interrupts::init_idt, serial::init_serial,
-};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -38,9 +35,10 @@ entry_point!(kernel_main);
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     let framebuffer = boot_info.framebuffer.as_mut().unwrap();
 
-    init_writer(framebuffer);
-    init_serial();
-    init_idt();
+    framebuffer::init_writer(framebuffer);
+    serial::init_writer();
+    interrupts::init_idt();
+    gdt::init();
 
     loop {}
 }
