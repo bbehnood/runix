@@ -10,7 +10,7 @@ mod serial;
 use core::panic::PanicInfo;
 
 use bootloader_api::{BootInfo, entry_point};
-use x86_64::instructions::{nop, port::Port};
+use x86_64::instructions::{self, nop, port::Port};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -37,10 +37,18 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 
     framebuffer::init_writer(framebuffer);
     serial::init_writer();
-    interrupts::init_idt();
     gdt::init();
+    interrupts::init_idt();
+    unsafe {
+        interrupts::PICS.lock().initialize();
+    }
+    instructions::interrupts::enable();
 
-    loop {}
+    println!("Hello, World!");
+
+    loop {
+        instructions::hlt();
+    }
 }
 
 #[panic_handler]

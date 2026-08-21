@@ -2,6 +2,7 @@ use core::fmt::{self, Write};
 
 use spin::{Mutex, Once};
 use uart_16550::{Config, Uart16550Tty, backend::PioBackend};
+use x86_64::instructions::interrupts;
 
 pub static SERIAL: Once<Mutex<Uart16550Tty<PioBackend>>> = Once::new();
 
@@ -31,10 +32,12 @@ macro_rules! serial_println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    SERIAL
-        .get()
-        .unwrap()
-        .lock()
-        .write_fmt(args)
-        .expect("Printing to serial failed");
+    interrupts::without_interrupts(|| {
+        SERIAL
+            .get()
+            .unwrap()
+            .lock()
+            .write_fmt(args)
+            .expect("Printing to serial failed");
+    })
 }

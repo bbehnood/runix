@@ -2,7 +2,7 @@ use spin::Once;
 use x86_64::{
     VirtAddr,
     instructions::tables::load_tss,
-    registers::segmentation::{CS, Segment},
+    registers::segmentation::{CS, DS, ES, FS, GS, SS, Segment},
     structures::{
         gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector},
         tss::TaskStateSegment,
@@ -43,6 +43,12 @@ pub fn init() {
 
     GDT.get().unwrap().0.load();
     unsafe {
+        SS::set_reg(SegmentSelector::NULL);
+        DS::set_reg(SegmentSelector::NULL);
+        ES::set_reg(SegmentSelector::NULL);
+        FS::set_reg(SegmentSelector::NULL);
+        GS::set_reg(SegmentSelector::NULL);
+
         CS::set_reg(GDT.get().unwrap().1.code_selector);
         load_tss(GDT.get().unwrap().1.tss_selector);
     }

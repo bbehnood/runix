@@ -5,6 +5,7 @@ use noto_sans_mono_bitmap::{
     FontWeight, RasterHeight, get_raster, get_raster_width,
 };
 use spin::{Mutex, Once};
+use x86_64::instructions::interrupts;
 
 pub static WRITER: Once<Mutex<Writer>> = Once::new();
 
@@ -37,8 +38,9 @@ macro_rules! clear_screen {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    WRITER.get().unwrap().lock().write_fmt(args).unwrap();
+    interrupts::without_interrupts(|| {
+        WRITER.get().unwrap().lock().write_fmt(args).unwrap();
+    })
 }
 
 #[doc(hidden)]
