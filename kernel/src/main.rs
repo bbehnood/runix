@@ -1,48 +1,24 @@
 #![no_std]
 #![no_main]
-#![feature(abi_x86_interrupt)]
-
-mod framebuffer;
-mod gdt;
-mod interrupts;
-mod serial;
 
 use core::panic::PanicInfo;
 
 use bootloader_api::{BootInfo, entry_point};
-use x86_64::instructions::{self, nop, port::Port};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum QemuExitCode {
-    Success = 0x10,
-    Failed = 0x11,
-}
-
-pub fn exit_qemu(exit_code: QemuExitCode) -> ! {
-    unsafe {
-        let mut port = Port::new(0xf4);
-        port.write(exit_code as u32);
-    }
-
-    loop {
-        nop();
-    }
-}
+use kernel::{
+    QemuExitCode, clear_screen, framebuffer::Color, println, serial_println,
+    set_color,
+};
+use x86_64::instructions;
 
 entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
-    let framebuffer = boot_info.framebuffer.as_mut().unwrap();
+    kernel::init(boot_info);
 
-    framebuffer::init_writer(framebuffer);
-    serial::init_writer();
-    gdt::init();
-    interrupts::init_idt();
-    unsafe {
-        interrupts::PICS.lock().initialize();
-    }
-    instructions::interrupts::enable();
+    clear_screen!(Color::RED);
+    clear_screen!(Color::BLUE);
+
+    set_color!(Color::WHITE, Color::BLUE);
 
     println!("Hello, World!");
 
@@ -54,5 +30,5 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     serial_println!("PANIC: {}", info);
-    exit_qemu(QemuExitCode::Failed);
+    kernel::exit_qemu(QemuExitCode::Failed);
 }
